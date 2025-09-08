@@ -58,3 +58,29 @@ jobs:
           name: build-${{ matrix.system }}
           path: build/${{ matrix.system }}/
           if-no-files-found: error
+
+  upload:
+    name: Upload
+    needs:
+      - release_id
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          path: build
+          merge-multiple: true
+      - name: List Artifacts
+        run: |
+          find build
+      - name: Upload Artifacts
+        run: |
+          cat <<EOF >.nexigon-cli.toml
+            hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
+            token = "${{ secrets.NEXIGON_USER_TOKEN }}"
+          EOF
+          BUILD_VERSION="build-${{ needs.release_id.outputs.release_id }}"./upload-release.sh
