@@ -46,8 +46,8 @@ jobs:
           docker run --privileged --rm tonistiigi/binfmt --install all
       - name: Build
         run: |
-          ./run-bakery build image "${{ matrix.system }}"
-          ./run-bakery build bundle "${{ matrix.system }}"
+          ./run-bakery bake image "${{ matrix.system }}" --release-id "${{ needs.release_id.outputs.release_id }}"
+          ./run-bakery bake bundle "${{ matrix.system }}" --release-id "${{ needs.release_id.outputs.release_id }}"
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
