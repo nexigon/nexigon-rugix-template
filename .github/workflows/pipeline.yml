@@ -10,26 +10,38 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  REPOSITORY: "nexigon-rugix-example"
+  PACKAGE: "example-rugix-os"
+
 jobs:
-  release_id:
-    name: Release ID
+  metadata:
+    name: Metadata
     runs-on: ubuntu-latest
     outputs:
-      release_id: ${{ steps.release_id.outputs.release_id }}
+      release_id: ${{ steps.metadata.outputs.release_id }}
+      version_id: ${{ steps.metadata.outputs.version_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Generate Build Version
-        id: release_id
+        id: metadata
         run: |
           TIMESTAMP=$(date +"%Y%m%d%H%M%S")
           GIT_COMMIT=$(git rev-parse --short HEAD)
           echo "release_id=$TIMESTAMP-$GIT_COMMIT" >> $GITHUB_OUTPUT
+          cat <<EOF >.nexigon-cli.toml
+            hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
+            token = "${{ secrets.NEXIGON_USER_TOKEN }}"
+          EOF
+          curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
+          VERSION_INFO=$(./nexigon-cli repositories versions create "$REPOSITORY/$PACKAGE" --tag "build-$TIMESTAMP-$GIT_COMMIT,locked")
+          echo "version_id=$(echo "$VERSION_INFO" | jq -r '.versionId')" >> $GITHUB_OUTPUT
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: release_id
+    needs: metadata
     strategy:
       fail-fast: false
       matrix:
@@ -50,37 +62,15 @@ jobs:
             NEXIGON_HUB_URL="${{ secrets.NEXIGON_HUB_URL }}"
             NEXIGON_TOKEN="${{ secrets.NEXIGON_DEPLOYMENT_TOKEN }}"
           EOF
-          ./run-bakery bake image "${{ matrix.system }}" --release-id "${{ needs.release_id.outputs.release_id }}"
-          ./run-bakery bake bundle "${{ matrix.system }}" --release-id "${{ needs.release_id.outputs.release_id }}"
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.system }}
-          path: build/${{ matrix.system }}/
-          if-no-files-found: error
-
-  upload:
-    name: Upload
-    needs:
-      - release_id
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: build-*
-          path: build
-          merge-multiple: true
-      - name: List Artifacts
-        run: |
-          find build
-      - name: Upload Artifacts
+          ./run-bakery bake image "${{ matrix.system }}" --release-id "${{ needs.metadata.outputs.release_id }}"
+          ./run-bakery bake bundle "${{ matrix.system }}" --release-id "${{ needs.metadata.outputs.release_id }}"
+      - name: Upload
         run: |
           cat <<EOF >.nexigon-cli.toml
             hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
             token = "${{ secrets.NEXIGON_USER_TOKEN }}"
           EOF
-          BUILD_VERSION="build-${{ needs.release_id.outputs.release_id }}"./upload-release.sh
+          curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
+          export NEXIGON_CLI="./nexigon-cli"
+          export BUILD_VERSION="build-${{ needs.metadata.outputs.release_id }}"
+          ./upload-release.sh
