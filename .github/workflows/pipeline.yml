@@ -46,6 +46,10 @@ jobs:
           docker run --privileged --rm tonistiigi/binfmt --install all
       - name: Build
         run: |
+          cat <<EOF >.env
+            NEXIGON_HUB_URL="${{ secrets.NEXIGON_HUB_URL }}"
+            NEXIGON_TOKEN="${{ secrets.NEXIGON_DEPLOYMENT_TOKEN }}"
+          EOF
           ./run-bakery bake image "${{ matrix.system }}" --release-id "${{ needs.release_id.outputs.release_id }}"
           ./run-bakery bake bundle "${{ matrix.system }}" --release-id "${{ needs.release_id.outputs.release_id }}"
       - name: Upload Build Artifacts
