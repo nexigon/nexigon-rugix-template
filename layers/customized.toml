@@ -25,3 +25,6 @@ recipes = [
 
 [parameters."core/set-hostname"]
 hostname = "nexigon-rugix-template"
+
+[parameters."nexigon/nexigon-agent"]
+version = "v0.5"

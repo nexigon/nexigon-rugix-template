@@ -1,0 +1,56 @@
+# spellchecker:ignore taiki dtolnay Taplo xvzf musleabihf gnueabihf msvc clippy bindgen
+
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - ci
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  release_id:
+    name: Release ID
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release_id.outputs.release_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Generate Build Version
+        id: release_id
+        run: |
+          TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+          echo "release_id=$TIMESTAMP-$GIT_COMMIT" >> $GITHUB_OUTPUT
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: release_id
+    strategy:
+      fail-fast: false
+      matrix:
+        system:
+          - customized-efi-amd64
+          - customized-efi-arm64
+          - customized-pi5
+          - customized-pi4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Qemu
+        run: |
+          docker run --privileged --rm tonistiigi/binfmt --install all
+      - name: Build
+        run: |
+          ./run-bakery build image "${{ matrix.system }}"
+          ./run-bakery build bundle "${{ matrix.system }}"
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.system }}
+          path: build/${{ matrix.system }}/
+          if-no-files-found: error
