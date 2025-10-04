@@ -29,13 +29,13 @@ jobs:
           TIMESTAMP=$(date +"%Y%m%d%H%M%S")
           GIT_COMMIT=$(git rev-parse --short HEAD)
           VERSION="$TIMESTAMP-$GIT_COMMIT"
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           cat <<EOF >.nexigon-cli.toml
             hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
             token = "${{ secrets.NEXIGON_USER_TOKEN }}"
           EOF
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
-          export BUILD_TAG="build-$version"
+          export BUILD_TAG="build-$VERSION"
           source ./scripts/build-vars.sh
           ./nexigon-cli repositories versions create "$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE" --tag "$BUILD_TAG,locked" --tag "$FLOATING_TAG,reassign"
 
