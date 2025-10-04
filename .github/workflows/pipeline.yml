@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.metadata.outputs.release_id }}
-      version_id: ${{ steps.metadata.outputs.version_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,17 +28,16 @@ jobs:
         run: |
           TIMESTAMP=$(date +"%Y%m%d%H%M%S")
           GIT_COMMIT=$(git rev-parse --short HEAD)
-          echo "release_id=$TIMESTAMP-$GIT_COMMIT" >> $GITHUB_OUTPUT
+          RELEASE_ID="$TIMESTAMP-$GIT_COMMIT"
+          echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
           cat <<EOF >.nexigon-cli.toml
             hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
             token = "${{ secrets.NEXIGON_USER_TOKEN }}"
           EOF
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
+          export BUILD_TAG="build-$RELEASE_ID"
           source ./scripts/build-vars.sh
-          export BUILD_TAG
-          export FLOATING_TAG
-          VERSION_INFO=$(./nexigon-cli repositories versions create "$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE" --tag "$BUILD_TAG,locked" --tag "$FLOATING_TAG,reassign")
-          echo "version_id=$(echo "$VERSION_INFO" | jq -r '.versionId')" >> $GITHUB_OUTPUT
+          ./nexigon-cli repositories versions create "$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE" --tag "$BUILD_TAG,locked" --tag "$FLOATING_TAG,reassign"
 
   build:
     name: Build
@@ -78,4 +76,4 @@ jobs:
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
           export NEXIGON_CLI="./nexigon-cli"
           export BUILD_TAG="build-${{ needs.metadata.outputs.release_id }}"
-          ./scripts/upload-release.sh
+          sudo ./scripts/upload-release.sh
