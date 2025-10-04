@@ -14,12 +14,11 @@ if [ -z "${NEXIGON_PACKAGE:-}" ]; then
     exit 1
 fi
 
+. ./scripts/build-vars.sh
+
 NEXIGON_CLI="${NEXIGON_CLI:-nexigon-cli}"
 
-GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
 STABLE_TAG=${STABLE_TAG:-"stable"}
-FLOATING_TAG=${FLOATING_TAG:-"latest-build-${GIT_BRANCH//\//-}"}
 
 PACKAGE_PATH="$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE"
 

@@ -35,7 +35,10 @@ jobs:
             token = "${{ secrets.NEXIGON_USER_TOKEN }}"
           EOF
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
-          VERSION_INFO=$(./nexigon-cli repositories versions create "$REPOSITORY/$PACKAGE" --tag "build-$TIMESTAMP-$GIT_COMMIT,locked")
+          source ./scripts/build-vars.sh
+          export BUILD_TAG
+          export FLOATING_TAG
+          VERSION_INFO=$(./nexigon-cli repositories versions create "$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE" --tag "$BUILD_TAG,locked" --tag "$FLOATING_TAG,reassign")
           echo "version_id=$(echo "$VERSION_INFO" | jq -r '.versionId')" >> $GITHUB_OUTPUT
 
   build:
