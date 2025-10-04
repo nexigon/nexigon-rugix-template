@@ -15,12 +15,12 @@ recipes = [
     "rugix-extra/debian-setup-timesyncd",
     # Enable discovery of the system in the local network.
     "rugix-extra/avahi",
-    "rugix-extra/github-ssh-keys",
     # Setup Nexigon Agent.
     "nexigon/nexigon-agent",
     # Configure Nexigon Agent.
     "nexigon/nexigon-agent-config",
-    "nexigon-rugix-ota",
+    # Nexigon-Rugix OTA update service.
+    "nexigon/nexigon-rugix-ota",
     # Install a static web site.
     "hello-world",
 ]
@@ -30,6 +30,3 @@ hostname = "nexigon-rugix-template"
 
 [parameters."nexigon/nexigon-agent"]
 version = "v0.5"
-
-[parameters."rugix-extra/github-ssh-keys"]
-users = "koehlma"

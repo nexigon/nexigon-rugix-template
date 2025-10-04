@@ -1,4 +1,0 @@
-description = "Nexigon-Rugix OTA update service"
-
-[parameters]
-interval = { default = "1h" }
