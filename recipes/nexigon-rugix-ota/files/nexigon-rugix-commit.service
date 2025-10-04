@@ -1,0 +1,11 @@
+[Unit]
+Description=Commit the Currently Booted System
+Requires=network.target
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nexgion-rugix-commit
+
+[Install]
+WantedBy=multi-user.target
