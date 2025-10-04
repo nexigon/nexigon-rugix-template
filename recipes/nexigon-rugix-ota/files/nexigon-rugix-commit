@@ -9,8 +9,8 @@ fi
 
 RUGIX_SYSTEM_INFO=$(rugix-ctrl system info)
 
-ACTIVE_GROUP=$(echo "$RUGIX_SYSTEM_INFO" | jq -r '.activeGroup')
-DEFAULT_GROUP=$(echo "$RUGIX_SYSTEM_INFO" | jq -r '.defaultGroup')
+ACTIVE_GROUP=$(echo "$RUGIX_SYSTEM_INFO" | jq -r '.boot.activeGroup')
+DEFAULT_GROUP=$(echo "$RUGIX_SYSTEM_INFO" | jq -r '.boot.defaultGroup')
 
 if [ "$ACTIVE_GROUP" != "$DEFAULT_GROUP" ]; then
     # Delay a bit to allow the system to settle.
@@ -20,4 +20,12 @@ if [ "$ACTIVE_GROUP" != "$DEFAULT_GROUP" ]; then
         --attribute "defaultGroup=$(jq -n --arg group "$DEFAULT_GROUP" '$group')" \
         '"committing system update"' || true
     rugix-ctrl system commit
+    RUGIX_SYSTEM_INFO=$(rugix-ctrl system info)
+
+    ACTIVE_GROUP=$(echo "$RUGIX_SYSTEM_INFO" | jq -r '.boot.activeGroup')
+    DEFAULT_GROUP=$(echo "$RUGIX_SYSTEM_INFO" | jq -r '.boot.defaultGroup')
+    nexigon-agent events emit --category "org.rugix.ota" \
+        --attribute "activeGroup=$(jq -n --arg group "$ACTIVE_GROUP" '$group')" \
+        --attribute "defaultGroup=$(jq -n --arg group "$DEFAULT_GROUP" '$group')" \
+        '"update committed"' || true
 fi
