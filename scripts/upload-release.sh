@@ -45,9 +45,9 @@ for build_dir in build/*; do
     fi
     if [ -e "$IMG_PATH" ]; then
         echo "[INFO] uploading '$SYSTEM_NAME' image"
-        asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$IMG_PATH")
-        asset_id=$(echo "$asset_info" | jq -r '.assetId')
         xz "$IMG_PATH"
+        asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$IMG_PATH.xz")
+        asset_id=$(echo "$asset_info" | jq -r '.assetId')        
         $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.img.xz"
     fi
     if [ -e "$BUNDLE_PATH" ]; then
