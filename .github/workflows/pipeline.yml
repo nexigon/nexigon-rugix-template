@@ -76,5 +76,5 @@ jobs:
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
           export NEXIGON_CLI="./nexigon-cli"
           export BUILD_TAG="build-${{ needs.metadata.outputs.release_id }}"
-          chown -R "$(id -u):$(id -g)" build
+          sudo chown -R "$(id -u):$(id -g)" build
           ./scripts/upload-release.sh
