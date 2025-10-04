@@ -2,7 +2,7 @@
 Description=Periodically Check for OTA Updates
 
 [Timer]
-OnBootSec=3min
+OnBootSec=1min
 OnUnitInactiveSec=@@INTERVAL@@
 RandomizedDelaySec=60
 Persistent=true

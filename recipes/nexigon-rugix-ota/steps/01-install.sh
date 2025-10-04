@@ -26,8 +26,3 @@ VERSION_PATH="${NEXIGON_REPOSITORY}/${NEXIGON_PACKAGE}/stable"
 EOF
 
 systemctl enable nexigon-rugix-ota.timer
-
-install -D -m 755 "${RECIPE_DIR}/files/nexigon-rugix-commit" -t /usr/bin
-install -D -m 644 "${RECIPE_DIR}/files/nexigon-rugix-commit.service" -t /lib/systemd/system
-
-systemctl enable nexigon-rugix-commit.service
