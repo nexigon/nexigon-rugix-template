@@ -97,7 +97,7 @@ VERSION_PATH=$(echo "$OTA_CONFIG" | jq -r '.path')
 nexigon-agent events emit --category "org.rugix.ota" \
     --attribute "path=$(jq -n --arg path "$VERSION_PATH" '$path')" \
     --attribute "system=$(jq -n --arg system "$SYSTEM_NAME" '$system')" \
-    --attribute "version=$(jq -n --arg version "$CURRENT_VERSION" '$version')" \
+    --attribute "currentVersion=$(jq -n --arg version "$CURRENT_VERSION" '$version')" \
     '"checking for updates"'
 
 TARGET_BUILD_INFO_URL=$(nexigon-agent repositories issue-url "$VERSION_PATH/$SYSTEM_NAME.build-info.json" | jq -r '.url')
@@ -108,15 +108,15 @@ TARGET_VERSION=$(echo "$TARGET_BUILD_INFO" | jq -r '.release.version')
 if [ "$TARGET_VERSION" == "$CURRENT_VERSION" ]; then
     echo "[INFO] no updates available" >&2
     nexigon-agent events emit --category "org.rugix.ota" \
-        --attribute "version=$(jq -n --arg version "$CURRENT_VERSION" '$version')" \
-        --attribute "latest=$(jq -n --arg version "$TARGET_VERSION" '$version')" \
+        --attribute "currentVersion=$(jq -n --arg version "$CURRENT_VERSION" '$version')" \
+        --attribute "targetVersion=$(jq -n --arg version "$TARGET_VERSION" '$version')" \
         '"no update available"'
     exit 0
 fi
 
 nexigon-agent events emit --category "org.rugix.ota" \
-    --attribute "version=$(jq -n --arg version "$CURRENT_VERSION" '$version')" \
-    --attribute "latest=$(jq -n --arg version "$TARGET_VERSION" '$version')" \
+    --attribute "currentVersion=$(jq -n --arg version "$CURRENT_VERSION" '$version')" \
+    --attribute "targetVersion=$(jq -n --arg version "$TARGET_VERSION" '$version')" \
     '"update available, installing"'
 
 if [ "$ACTIVE_GROUP" == "a" ]; then
