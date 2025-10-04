@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  REPOSITORY: "nexigon-rugix-example"
-  PACKAGE: "example-rugix-os"
+  NEXIGON_REPOSITORY: "nexigon-rugix-example"
+  NEXIGON_PACKAGE: "example-rugix-os"
 
 jobs:
   metadata:
@@ -61,6 +61,8 @@ jobs:
           cat <<EOF >.env
             NEXIGON_HUB_URL="${{ secrets.NEXIGON_HUB_URL }}"
             NEXIGON_TOKEN="${{ secrets.NEXIGON_DEPLOYMENT_TOKEN }}"
+            NEXIGON_REPOSITORY="${{ env.NEXIGON_REPOSITORY }}"
+            NEXIGON_PACKAGE="${{ env.NEXIGON_PACKAGE }}"
           EOF
           ./run-bakery bake image "${{ matrix.system }}" --release-id "${{ needs.metadata.outputs.release_id }}"
           ./run-bakery bake bundle "${{ matrix.system }}" --release-id "${{ needs.metadata.outputs.release_id }}"
@@ -72,5 +74,5 @@ jobs:
           EOF
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
           export NEXIGON_CLI="./nexigon-cli"
-          export BUILD_VERSION="build-${{ needs.metadata.outputs.release_id }}"
-          ./upload-release.sh
+          export BUILD_TAG="build-${{ needs.metadata.outputs.release_id }}"
+          ./scripts/upload-release.sh
