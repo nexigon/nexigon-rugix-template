@@ -1,0 +1,80 @@
+# spellchecker:ignore taiki dtolnay Taplo xvzf musleabihf gnueabihf msvc clippy bindgen
+
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - ci
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NEXIGON_REPOSITORY: ${{ vars.NEXIGON_REPOSITORY }}
+  NEXIGON_PACKAGE: ${{ vars.NEXIGON_PACKAGE }}
+
+jobs:
+  metadata:
+    name: Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Generate Build Version
+        id: metadata
+        run: |
+          TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+          VERSION="$TIMESTAMP-$GIT_COMMIT"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          cat <<EOF >.nexigon-cli.toml
+            hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
+            token = "${{ secrets.NEXIGON_USER_TOKEN }}"
+          EOF
+          curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
+          export BUILD_TAG="build-$VERSION"
+          source ./scripts/build-vars.sh
+          ./nexigon-cli repositories versions create "$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE" --tag "$BUILD_TAG,locked" --tag "$FLOATING_TAG,reassign"
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: metadata
+    strategy:
+      fail-fast: false
+      matrix:
+        system:
+          - customized-efi-amd64
+          - customized-efi-arm64
+          - customized-pi5
+          - customized-pi4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Qemu
+        run: |
+          docker run --privileged --rm tonistiigi/binfmt --install all
+      - name: Build
+        run: |
+          cat <<EOF >.env
+            NEXIGON_HUB_URL="${{ secrets.NEXIGON_HUB_URL }}"
+            NEXIGON_TOKEN="${{ secrets.NEXIGON_DEPLOYMENT_TOKEN }}"
+            NEXIGON_REPOSITORY="${{ env.NEXIGON_REPOSITORY }}"
+            NEXIGON_PACKAGE="${{ env.NEXIGON_PACKAGE }}"
+          EOF
+          ./run-bakery bake image "${{ matrix.system }}" --release-version "${{ needs.metadata.outputs.version }}"
+          ./run-bakery bake bundle "${{ matrix.system }}" --release-version "${{ needs.metadata.outputs.version }}"
+      - name: Upload
+        run: |
+          cat <<EOF >.nexigon-cli.toml
+            hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
+            token = "${{ secrets.NEXIGON_USER_TOKEN }}"
+          EOF
+          curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
+          export NEXIGON_CLI="./nexigon-cli"
+          export BUILD_TAG="build-${{ needs.metadata.outputs.version }}"
+          sudo chown -R "$(id -u):$(id -g)" build
+          ./scripts/upload-release.sh

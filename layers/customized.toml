@@ -19,9 +19,14 @@ recipes = [
     "nexigon/nexigon-agent",
     # Configure Nexigon Agent.
     "nexigon/nexigon-agent-config",
+    # Nexigon-Rugix OTA update service.
+    "nexigon/nexigon-rugix-ota",
     # Install a static web site.
     "hello-world",
 ]
 
 [parameters."core/set-hostname"]
 hostname = "nexigon-rugix-template"
+
+[parameters."nexigon/nexigon-agent"]
+version = "v0.5"
