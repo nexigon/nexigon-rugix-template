@@ -17,8 +17,6 @@ If you want to use Nexigon for OTA updates, also fill in these variables:
 - `NEXIGON_REPOSITORY`: The name of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
 
-**Note:** To be able to use Nexigon's software management functionality and OTA updates with the public demo instance, you need to configure an S3 bucket within the repository's settings.
-
 
 ## OTA Update Workflow
 
@@ -32,7 +30,8 @@ The process for deploying a new update to your devices is straightforward.
 2. **Upload the release** to your Nexigon repository using the [`upload-release`](./scripts/upload-release.sh) script. This script will scan the `build` directory for the necessary artifacts, including images, update bundles, SBOMs, and build metadata, and upload them to the repository. To this end, this script will create a new version of the specified package and add the artifacts as assets to it. It will then also assign a floating tag of the form `latest-build-BRANCH` to the new version, to mark it as the latest build for the current Git branch.
 3. **Mark the release as stable** using the [`stabilize-release`](./scripts/stabilize-release.sh) script. This tags the latest build of the current branch as `stable`, thereby promoting it as to the latest stable release for deployment.
 
-**Note:** The scripts will use `nexigon-cli` to interact with Nexigon. Make sure you have it installed and configured correctly, otherwise they will fail.
+**Note:** The scripts will use `nexigon-cli` to interact with Nexigon. Make sure you have it installed and configured correctly.
+To be able to use Nexigon's software management functionality and OTA updates with the public demo instance, you need to configure an S3 bucket within the repository's settings.
 
 This template includes the [`nexigon-rugix-ota`](https://github.com/nexigon/nexigon-rugix/tree/main/recipes/nexigon-rugix-ota) recipe from the [`nexigon-rugix`](https://github.com/nexigon/nexigon-rugix) repository.
 This recipe installs a Systemd service that will periodically check for updates and fetch and install the latest stable release of the specified package, if its version deviates from teh current one.
