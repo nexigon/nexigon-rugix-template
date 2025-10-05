@@ -38,6 +38,8 @@ This recipe installs a Systemd service that will periodically check for updates 
 The correct artifacts are automatically identified based on the system name, allowing you to use the same release process across multiple device variants.
 Telemetry about the update process is sent to Nexigon in the form of events and device properties.
 
+To manually check for and install updates, run `nexigon-rugix-ota` as root.
+
 
 ## GitHub Actions Workflow
 
