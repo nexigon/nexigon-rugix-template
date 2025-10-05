@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  NEXIGON_REPOSITORY: "nexigon-rugix-example"
-  NEXIGON_PACKAGE: "example-rugix-os"
+  NEXIGON_REPOSITORY: ${{ vars.NEXIGON_REPOSITORY }}
+  NEXIGON_PACKAGE: ${{ vars.NEXIGON_PACKAGE }}
 
 jobs:
   metadata:
