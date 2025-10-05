@@ -34,7 +34,7 @@ The process for deploying a new update to your devices is straightforward.
 To be able to use Nexigon's software management functionality and OTA updates with the public demo instance, you need to configure an S3 bucket within the repository's settings.
 
 This template includes the [`nexigon-rugix-ota`](https://github.com/nexigon/nexigon-rugix/tree/main/recipes/nexigon-rugix-ota) recipe from the [`nexigon-rugix`](https://github.com/nexigon/nexigon-rugix) repository.
-This recipe installs a Systemd service that will periodically check for updates and fetch and install the latest stable release of the specified package, if its version deviates from teh current one.
+This recipe installs a Systemd service that will periodically check for updates and install the latest stable release of the specified package, if its version deviates from the current one.
 The correct artifacts are automatically identified based on the system name, allowing you to use the same release process across multiple device variants.
 Telemetry about the update process is sent to Nexigon in the form of events and device properties.
 
