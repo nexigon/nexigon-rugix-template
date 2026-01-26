@@ -2,7 +2,6 @@
 
 This repository provides a template for integrating [Nexigon](https://nexigon.dev) into a Rugix project for **seamless over-the-air (OTA) system updates and secure remote access** to your devices.
 
-
 ## Setup
 
 To set up the project, follow these steps:
@@ -14,9 +13,8 @@ To set up the project, follow these steps:
 
 If you want to use Nexigon for OTA updates, also fill in these variables:
 
-- `NEXIGON_REPOSITORY`: The name of the Nexigon repository to use.
+- `NEXIGON_REPOSITORY`: The ID of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
-
 
 ## OTA Update Workflow
 
@@ -40,7 +38,6 @@ Telemetry about the update process is sent to Nexigon in the form of events and 
 
 To manually check for and install updates, run `nexigon-rugix-ota` as root.
 
-
 ## GitHub Actions Workflow
 
 This template includes a GitHub Actions workflow for building and uploading releases to Nexigon.
@@ -54,7 +51,6 @@ In addition, you also need to configure the following variables:
 
 - `NEXIGON_REPOSITORY`: The name of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
-
 
 ## ⚖️ Licensing
 
