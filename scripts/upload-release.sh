@@ -37,6 +37,7 @@ for build_dir in build/*; do
     SYSTEM_NAME=$(basename "$build_dir")
     IMG_PATH="$build_dir/system.img"
     BUNDLE_PATH="$build_dir/system.rugixb"
+    BUNDLE_HASH_PATH="$build_dir/system.rugixb-hash"
     SBOM_PATH="$build_dir/sbom.spdx.json"
     INFO_PATH="$build_dir/system-build-info.json"
     if [ ! -e "$IMG_PATH" ]; then
@@ -56,9 +57,9 @@ for build_dir in build/*; do
         asset_id=$(echo "$asset_info" | jq -r '.assetId')
         $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.rugixb"
     fi
-    if [ -e "$BUNDLE_PATH" ]; then
-        echo "[INFO] uploading '$SYSTEM_NAME' bundle"
-        asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$BUNDLE_PATH")
+    if [ -e "$BUNDLE_HASH_PATH" ]; then
+        echo "[INFO] uploading '$SYSTEM_NAME' bundle hash"
+        asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$BUNDLE_HASH_PATH")
         asset_id=$(echo "$asset_info" | jq -r '.assetId')
         $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.rugixb-hash"
     fi

@@ -67,6 +67,7 @@ jobs:
           EOF
           ./run-bakery bake image "${{ matrix.system }}" --release-version "${{ needs.metadata.outputs.version }}"
           ./run-bakery bake bundle "${{ matrix.system }}" --release-version "${{ needs.metadata.outputs.version }}"
+          find build
       - name: Upload
         run: |
           cat <<EOF >.nexigon-cli.toml
