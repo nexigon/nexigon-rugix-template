@@ -56,6 +56,12 @@ for build_dir in build/*; do
         asset_id=$(echo "$asset_info" | jq -r '.assetId')
         $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.rugixb"
     fi
+    if [ -e "$BUNDLE_PATH" ]; then
+        echo "[INFO] uploading '$SYSTEM_NAME' bundle"
+        asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$BUNDLE_PATH")
+        asset_id=$(echo "$asset_info" | jq -r '.assetId')
+        $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.rugixb-hash"
+    fi
     if [ -e "$SBOM_PATH" ]; then
         echo "[INFO] uploading '$SYSTEM_NAME' SBOM"
         asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$SBOM_PATH")
