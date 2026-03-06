@@ -30,3 +30,16 @@ hostname = "nexigon-rugix-template"
 
 [parameters."nexigon/nexigon-agent"]
 version = "v0.5"
+
+[parameters."nexigon/nexigon-agent-config"]
+# Enable the remote terminal and declare web UI export.
+extra_config = """
+[terminal]
+enabled = true
+user = "root"
+
+[[exports]]
+name = "Web UI"
+protocol = "http"
+port = 80
+"""
