@@ -8,7 +8,7 @@ To set up the project, follow these steps:
 
 1. Copy the `env.template` file to `.env`.
 2. Fill in the following variables in your new `.env` file:
-   - `NEXIGON_HUB_URL`: The URL of your Nexigon Hub instance.
+   - `NEXIGON_HUB_URL`: The URL of your Nexigon instance.
    - `NEXIGON_TOKEN`: The deployment token of the project.
 
 If you want to use Nexigon for OTA updates, also fill in these variables:
@@ -29,7 +29,7 @@ The process for deploying a new update to your devices is straightforward.
 3. **Mark the release as stable** using the [`stabilize-release`](./scripts/stabilize-release.sh) script. This tags the latest build of the current branch as `stable`, thereby promoting it as to the latest stable release for deployment.
 
 **Note:** The scripts will use `nexigon-cli` to interact with Nexigon. Make sure you have it installed and configured correctly.
-To be able to use Nexigon's software management functionality and OTA updates with the public demo instance, you need to configure an S3 bucket within the repository's settings.
+To be able to use Nexigon's software management functionality and OTA updates with Nexigon Cloud, you need to configure an S3 bucket within the repository's settings.
 
 This template includes the [`nexigon-rugix-ota`](https://github.com/nexigon/nexigon-rugix/tree/main/recipes/nexigon-rugix-ota) recipe from the [`nexigon-rugix`](https://github.com/nexigon/nexigon-rugix) repository.
 This recipe installs a Systemd service that will periodically check for updates and install the latest stable release of the specified package, if its version deviates from the current one.
@@ -38,12 +38,14 @@ Telemetry about the update process is sent to Nexigon in the form of events and 
 
 To manually check for and install updates, run `nexigon-rugix-ota` as root.
 
+If you need a more complex update workflow, e.g., display the available update to a user and wait for their explicit confirmation, copy the `nexigon-rugix-ota` recipe and modify the [update script](https://github.com/nexigon/nexigon-rugix/tree/main/recipes/nexigon-rugix-ota/files/nexigon-rugix-ota). Nexigon follows a [primitives-first architecture](https://nexigon.cloud/blog/2026-02-19-primitives-first-architecture/) giving you all the flexibility to customize the update process according to your requirements.
+
 ## GitHub Actions Workflow
 
 This template includes a GitHub Actions workflow for building and uploading releases to Nexigon.
 To use it, you need to configure the following secrets in your GitHub repository:
 
-- `NEXIGON_HUB_URL`: The URL of your Nexigon Hub instance.
+- `NEXIGON_HUB_URL`: The URL of your Nexigon instance.
 - `NEXIGON_DEPLOYMENT_TOKEN`: The deployment token of the project.
 - `NEXIGON_USER_TOKEN`: The user token to access the repository.
 
