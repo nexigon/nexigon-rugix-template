@@ -29,6 +29,7 @@ jobs:
           EOF
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
           export NEXIGON_CLI="./nexigon-cli"
+          touch .env
           ./scripts/prepare-release.sh
       - name: Upload .release-env
         uses: actions/upload-artifact@v4
