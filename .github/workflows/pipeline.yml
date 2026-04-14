@@ -36,6 +36,7 @@ jobs:
         with:
           name: release-env
           path: .release-env
+          include-hidden-files: true
 
   build:
     name: Build
