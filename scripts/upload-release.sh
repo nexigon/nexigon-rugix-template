@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# Upload build artifacts to Nexigon Hub for the version pinned by prepare-release.sh.
+#
+# Usage:
+#   ./scripts/upload-release.sh
 
 set -euo pipefail
 
@@ -14,24 +19,30 @@ if [ -z "${NEXIGON_PACKAGE:-}" ]; then
     exit 1
 fi
 
-. ./scripts/build-vars.sh
+if [ ! -f .release-env ]; then
+    echo "[ERROR] .release-env not found — run ./scripts/prepare-release.sh first"
+    exit 1
+fi
+
+. .release-env
 
 NEXIGON_CLI="${NEXIGON_CLI:-nexigon-cli}"
 
-PACKAGE_PATH="$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE"
-VERSION_PATH="$PACKAGE_PATH/$BUILD_TAG"
-
-# Create the build version, if it doesn't exist.
-BUILD_VERSION_INFO=$($NEXIGON_CLI repositories versions resolve "$VERSION_PATH")
-if [ "$(echo "$BUILD_VERSION_INFO" | jq -r '.result')" == "Found" ]; then
-    echo "[INFO] build version already exists, amending it"
-    VERSION_ID=$(echo "$BUILD_VERSION_INFO" | jq -r '.versionId')
-else
-    echo "[INFO] build version does not exist, creating it"
-    VERSION_ID=$($NEXIGON_CLI repositories versions create "$PACKAGE_PATH" --tag "$BUILD_TAG,locked" --tag "$FLOATING_TAG,reassign" | jq -r '.versionId')
+# If VERSION_ID was not set by prepare-release.sh (e.g., CI sets BUILD_TAG
+# directly), resolve it from the tag.
+if [ -z "${VERSION_ID:-}" ]; then
+    PACKAGE_PATH="$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE"
+    VERSION_PATH="$PACKAGE_PATH/$BUILD_TAG"
+    BUILD_VERSION_INFO=$($NEXIGON_CLI repositories versions resolve "$VERSION_PATH")
+    if [ "$(echo "$BUILD_VERSION_INFO" | jq -r '.result')" == "Found" ]; then
+        VERSION_ID=$(echo "$BUILD_VERSION_INFO" | jq -r '.versionId')
+    else
+        echo "[ERROR] version '$BUILD_TAG' not found — run ./scripts/prepare-release.sh first"
+        exit 1
+    fi
 fi
 
-echo "VERSION_ID=${VERSION_ID}"
+echo "[INFO] uploading to version $VERSION_ID (tag: $BUILD_TAG)"
 
 for build_dir in build/*; do
     SYSTEM_NAME=$(basename "$build_dir")
@@ -40,22 +51,46 @@ for build_dir in build/*; do
     BUNDLE_HASH_PATH="$build_dir/system.rugixb-hash"
     SBOM_PATH="$build_dir/sbom.spdx.json"
     INFO_PATH="$build_dir/system-build-info.json"
-    if [ ! -e "$IMG_PATH" ]; then
-        echo "[WARN] skipping '$SYSTEM_NAME', no bundle found"
+    if [ ! -e "$IMG_PATH.xz" ] && [ ! -e "$BUNDLE_PATH" ]; then
+        echo "[WARN] skipping '$SYSTEM_NAME', no image or bundle found"
         continue
     fi
-    if [ -e "$IMG_PATH" ]; then
+    # Sanity check: verify the baked release version matches the one we are uploading.
+    if [ ! -e "$INFO_PATH" ]; then
+        echo "[ERROR] build info not found for '$SYSTEM_NAME' at $INFO_PATH"
+        exit 1
+    fi
+    BAKED_VERSION=$(jq -r '.release.version' "$INFO_PATH")
+    if [ "$BAKED_VERSION" != "$VERSION" ]; then
+        echo "[ERROR] version mismatch for '$SYSTEM_NAME': build info has '$BAKED_VERSION' but .release-env has '$VERSION'"
+        echo "[ERROR] the image was likely built with a different version — rebuild with ./scripts/build-release.sh"
+        exit 1
+    fi
+    SBOM_FILENAME="$SYSTEM_NAME.spdx.json"
+    if [ -e "$IMG_PATH.xz" ]; then
         echo "[INFO] uploading '$SYSTEM_NAME' image"
-        xz "$IMG_PATH"
         asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$IMG_PATH.xz")
-        asset_id=$(echo "$asset_info" | jq -r '.assetId')        
-        $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.img.xz"
+        asset_id=$(echo "$asset_info" | jq -r '.assetId')
+        img_metadata=$(jq -nc --arg sbom "$SBOM_FILENAME" '{relations: {sbom: [$sbom]}}')
+        $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.img.xz" \
+            --metadata "$img_metadata"
+    fi
+    # Read the bundle hash so we can attach it as metadata on the bundle.
+    BUNDLE_HASH=""
+    if [ -e "$BUNDLE_HASH_PATH" ]; then
+        BUNDLE_HASH=$(cat "$BUNDLE_HASH_PATH")
     fi
     if [ -e "$BUNDLE_PATH" ]; then
         echo "[INFO] uploading '$SYSTEM_NAME' bundle"
         asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$BUNDLE_PATH")
         asset_id=$(echo "$asset_info" | jq -r '.assetId')
-        $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.rugixb"
+        bundle_metadata=$(jq -nc \
+            --arg bundleHash "$BUNDLE_HASH" \
+            --arg version "$VERSION" \
+            --arg sbom "$SBOM_FILENAME" \
+            '{rugix: {bundleHash: $bundleHash}, relations: {sbom: [$sbom]}, version: $version}')
+        $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.rugixb" \
+            --metadata "$bundle_metadata"
     fi
     if [ -e "$BUNDLE_HASH_PATH" ]; then
         echo "[INFO] uploading '$SYSTEM_NAME' bundle hash"
@@ -67,7 +102,7 @@ for build_dir in build/*; do
         echo "[INFO] uploading '$SYSTEM_NAME' SBOM"
         asset_info=$($NEXIGON_CLI repositories assets upload "$NEXIGON_REPOSITORY" "$SBOM_PATH")
         asset_id=$(echo "$asset_info" | jq -r '.assetId')
-        $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SYSTEM_NAME.spdx.json"
+        $NEXIGON_CLI repositories versions assets add "$VERSION_ID" "$asset_id" "$SBOM_FILENAME"
     fi
     if [ -e "$INFO_PATH" ]; then
         echo "[INFO] uploading '$SYSTEM_NAME' build info"

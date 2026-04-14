@@ -2,3 +2,4 @@
 /.rugix
 .env
 .nexigon-cli.toml
+.release-env

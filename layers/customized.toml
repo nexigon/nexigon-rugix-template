@@ -19,10 +19,20 @@ recipes = [
     "nexigon/nexigon-agent",
     # Configure Nexigon Agent.
     "nexigon/nexigon-agent-config",
-    # Nexigon-Rugix OTA update service.
+    # Power management commands.
+    "nexigon/nexigon-power",
+    # Systemd service management commands.
+    "nexigon/nexigon-systemd",
+    # Rugix Apps lifecycle commands.
+    "nexigon/nexigon-rugix-apps",
+    # Rugix OTA update service.
     "nexigon/nexigon-rugix-ota",
+    # Rugix watchdog (auto-rollback).
+    "nexigon/nexigon-rugix-watchdog",
     # Install a static web site.
     "hello-world",
+    # Install Node-RED.
+    "node-red",
 ]
 
 [parameters."core/set-hostname"]
@@ -34,6 +44,9 @@ version = "v0.5"
 [parameters."nexigon/nexigon-agent-config"]
 # Enable the remote terminal and declare web UI export.
 extra_config = """
+[commands]
+enabled = true
+
 [terminal]
 enabled = true
 user = "root"
@@ -42,4 +55,8 @@ user = "root"
 name = "Web UI"
 protocol = "http"
 port = 80
+[[exports]]
+name = "Node-RED"
+protocol = "http"
+port = 1880
 """

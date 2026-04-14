@@ -14,7 +14,12 @@ if [ -z "${NEXIGON_PACKAGE:-}" ]; then
     exit 1
 fi
 
-. ./scripts/build-vars.sh
+if [ ! -f .release-env ]; then
+    echo "[ERROR] .release-env not found — run ./scripts/prepare-release.sh first"
+    exit 1
+fi
+
+. .release-env
 
 NEXIGON_CLI="${NEXIGON_CLI:-nexigon-cli}"
 

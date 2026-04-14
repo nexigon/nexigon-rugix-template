@@ -1,0 +1,16 @@
+[Unit]
+Description=Node-RED Podman
+After=network.target
+
+[Service]
+Type=exec
+PIDFile=/run/nodered-podman.pid
+ExecStart=podman run --replace --name nodered --rm -p 1880:1880 -v node_red_data:/data docker.io/nodered/node-red:latest
+ExecStop=podman stop --ignore nodered
+TimeoutStopSec=5
+KillMode=mixed
+Restart=always
+RestartSec=60s
+
+[Install]
+WantedBy=multi-user.target

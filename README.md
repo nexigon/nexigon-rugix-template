@@ -18,18 +18,56 @@ If you want to use Nexigon for OTA updates, also fill in these variables:
 
 ## OTA Update Workflow
 
-The process for deploying a new update to your devices is straightforward.
+The release workflow consists of three scripts that share state through a `.release-env` file. This ensures the version is generated once and stays consistent across all steps — both locally and in CI.
 
-1. **Build your release** using Rugix:
-   ```bash
-   ./run-bakery bake image <system>
-   ./run-bakery bake bundle <system>
-   ```
-2. **Upload the release** to your Nexigon repository using the [`upload-release`](./scripts/upload-release.sh) script. This script will scan the `build` directory for the necessary artifacts, including images, update bundles, SBOMs, and build metadata, and upload them to the repository. To this end, this script will create a new version of the specified package and add the artifacts as assets to it. It will then also assign a floating tag of the form `latest-build-BRANCH` to the new version, to mark it as the latest build for the current Git branch.
-3. **Mark the release as stable** using the [`stabilize-release`](./scripts/stabilize-release.sh) script. This tags the latest build of the current branch as `stable`, thereby promoting it as to the latest stable release for deployment.
+### 1. Prepare the release
 
-**Note:** The scripts will use `nexigon-cli` to interact with Nexigon. Make sure you have it installed and configured correctly.
-To be able to use Nexigon's software management functionality and OTA updates with Nexigon Cloud, you need to configure an S3 bucket within the repository's settings.
+```bash
+./scripts/prepare-release.sh
+```
+
+Generates a version identifier from the current timestamp and Git commit, creates the corresponding version in your Nexigon repository, and writes a `.release-env` file that pins the version for subsequent steps. The version is tagged with a locked build tag (e.g., `build-20260401120000-abc1234`) and a floating branch tag (e.g., `latest-build-main`).
+
+### 2. Build the release
+
+```bash
+./scripts/build-release.sh <system> [<system> ...]
+```
+
+Reads the pinned version from `.release-env` and builds system images and update bundles using the Rugix bakery with the matching `--release-version`. After building, the system image is compressed with `xz`. You can build multiple systems in one invocation:
+
+```bash
+./scripts/build-release.sh customized-efi-amd64 customized-pi5
+```
+
+### 3. Upload the release
+
+```bash
+./scripts/upload-release.sh
+```
+
+Reads `.release-env`, verifies that each build's baked version matches the pinned version (to catch stale builds), and uploads all artifacts to the Nexigon repository. Uploaded artifacts include:
+
+- **System image** (`.img.xz`) — with metadata linking to its SBOM
+- **Update bundle** (`.rugixb`) — with the bundle hash and SBOM link in metadata
+- **Bundle hash** (`.rugixb-hash`) — for backwards compatibility
+- **SBOM** (`.spdx.json`)
+- **Build info** (`.build-info.json`)
+
+Asset metadata is attached during upload, e.g., the bundle asset carries `{"rugix": {"bundleHash": "..."}, "relations": {"sbom": [...]}}`.
+
+### 4. Stabilize the release
+
+```bash
+./scripts/stabilize-release.sh
+```
+
+Tags the latest build of the current branch as `stable`, promoting it as the latest stable release for deployment.
+
+### Notes
+
+The scripts use `nexigon-cli` to interact with Nexigon. Make sure you have it installed and configured correctly.
+To use Nexigon's software management functionality and OTA updates with Nexigon Cloud, you need to configure an S3 bucket within the repository's settings.
 
 This template includes the [`nexigon-rugix-ota`](https://github.com/nexigon/nexigon-rugix/tree/main/recipes/nexigon-rugix-ota) recipe from the [`nexigon-rugix`](https://github.com/nexigon/nexigon-rugix) repository.
 This recipe installs a Systemd service that will periodically check for updates and install the latest stable release of the specified package, if its version deviates from the current one.
@@ -42,7 +80,8 @@ If you need a more complex update workflow, e.g., display the available update t
 
 ## GitHub Actions Workflow
 
-This template includes a GitHub Actions workflow for building and uploading releases to Nexigon.
+This template includes a GitHub Actions workflow that runs the same scripts described above. The `prepare-release` job creates the version and uploads `.release-env` as an artifact. Parallel `build` jobs download it, build each system, and upload the results.
+
 To use it, you need to configure the following secrets in your GitHub repository:
 
 - `NEXIGON_HUB_URL`: The URL of your Nexigon instance.
