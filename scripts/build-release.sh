@@ -32,6 +32,6 @@ for system in "$@"; do
     IMG_PATH="build/$system/system.img"
     if [ -e "$IMG_PATH" ]; then
         echo "[INFO] compressing '$system' image"
-        xz "$IMG_PATH"
+        xz -T0 "$IMG_PATH"
     fi
 done
