@@ -39,7 +39,7 @@ recipes = [
 hostname = "nexigon-rugix-template"
 
 [parameters."nexigon/nexigon-agent"]
-version = "v0.5"
+version = "v0.6.0"
 
 [parameters."nexigon/nexigon-agent-config"]
 # Enable the remote terminal and declare web UI export.
