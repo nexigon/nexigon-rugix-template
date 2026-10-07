@@ -80,7 +80,11 @@ If you need a more complex update workflow, e.g., display the available update t
 
 ## GitHub Actions Workflow
 
-This template includes a GitHub Actions workflow that runs the same scripts described above. The `prepare-release` job creates the version and uploads `.release-env` as an artifact. Parallel `build` jobs download it, build each system, and upload the results.
+This template includes a GitHub Actions workflow that runs the same scripts described above. On pushes to `main` or `ci` and manual runs, the `prepare-release` job creates the version and uploads `.release-env` as an artifact. Parallel `build` jobs download it, build each system, and upload the results.
+
+Pull requests build all four systems with placeholder configuration and a version derived from the tested commit. They do not require Nexigon credentials, create repository versions, or publish artifacts to Nexigon. These images are for build validation only.
+
+Builds use Ubuntu 24.04 runners matching the image architecture: x86-64 for `customized-efi-amd64`, and ARM64 for `customized-efi-arm64`, `customized-pi5`, and `customized-pi4`. Native ARM64 runners avoid QEMU emulation during package installation.
 
 To use it, you need to configure the following secrets in your GitHub repository:
 

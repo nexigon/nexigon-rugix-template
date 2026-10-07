@@ -21,7 +21,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Prepare PR Build
+        if: github.event_name == 'pull_request'
+        run: echo "VERSION=ci-$GITHUB_SHA" >.release-env
       - name: Create Release
+        if: github.event_name != 'pull_request'
         run: |
           cat <<EOF >.nexigon-cli.toml
             hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
@@ -39,17 +43,21 @@ jobs:
           include-hidden-files: true
 
   build:
-    name: Build
-    runs-on: ubuntu-latest
+    name: Build (${{ matrix.system }})
+    runs-on: ${{ matrix.os }}
     needs: prepare-release
     strategy:
       fail-fast: false
       matrix:
-        system:
-          - customized-efi-amd64
-          - customized-efi-arm64
-          - customized-pi5
-          - customized-pi4
+        include:
+          - system: customized-efi-amd64
+            os: ubuntu-24.04
+          - system: customized-efi-arm64
+            os: ubuntu-24.04-arm
+          - system: customized-pi5
+            os: ubuntu-24.04-arm
+          - system: customized-pi4
+            os: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,10 +65,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-env
-      - name: Setup Qemu
+      - name: Configure PR Build
+        if: github.event_name == 'pull_request'
         run: |
-          docker run --privileged --rm tonistiigi/binfmt --install all
-      - name: Build
+          cat <<'EOF' >.env
+            NEXIGON_HUB_URL="https://ci.invalid"
+            NEXIGON_TOKEN="ci-build-placeholder"
+            NEXIGON_REPOSITORY="ci-build"
+            NEXIGON_PACKAGE="ci-build"
+          EOF
+      - name: Configure Release Build
+        if: github.event_name != 'pull_request'
         run: |
           cat <<EOF >.env
             NEXIGON_HUB_URL="${{ secrets.NEXIGON_HUB_URL }}"
@@ -68,8 +83,10 @@ jobs:
             NEXIGON_REPOSITORY="${{ env.NEXIGON_REPOSITORY }}"
             NEXIGON_PACKAGE="${{ env.NEXIGON_PACKAGE }}"
           EOF
-          ./scripts/build-release.sh "${{ matrix.system }}"
+      - name: Build
+        run: ./scripts/build-release.sh "${{ matrix.system }}"
       - name: Upload
+        if: github.event_name != 'pull_request'
         run: |
           cat <<EOF >.nexigon-cli.toml
             hub-url = "${{ secrets.NEXIGON_HUB_URL }}"
