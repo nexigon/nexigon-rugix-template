@@ -13,7 +13,7 @@ To set up the project, follow these steps:
 
 If you want to use Nexigon for OTA updates, also fill in these variables:
 
-- `NEXIGON_REPOSITORY`: The ID of the Nexigon repository to use.
+- `NEXIGON_REPOSITORY`: The path name or ID of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
 
 ## OTA Update Workflow
@@ -94,7 +94,7 @@ To use it, you need to configure the following secrets in your GitHub repository
 
 In addition, you also need to configure the following variables:
 
-- `NEXIGON_REPOSITORY`: The name of the Nexigon repository to use.
+- `NEXIGON_REPOSITORY`: The path name or ID of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
 
 ## ⚖️ Licensing
