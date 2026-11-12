@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up mise
+        uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550 # v5.2.2
+        with:
+          install: false
       - name: Prepare PR Build
         if: github.event_name == 'pull_request'
         run: echo "VERSION=ci-$GITHUB_SHA" >.release-env
@@ -34,7 +38,7 @@ jobs:
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
           export NEXIGON_CLI="./nexigon-cli"
           touch .env
-          ./scripts/prepare-release.sh
+          mise run release:prepare
       - name: Upload .release-env
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -61,6 +65,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up mise
+        uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550 # v5.2.2
+        with:
+          install: false
+
       - name: Download .release-env
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -84,7 +93,7 @@ jobs:
             NEXIGON_PACKAGE="${{ env.NEXIGON_PACKAGE }}"
           EOF
       - name: Build
-        run: ./scripts/build-release.sh "${{ matrix.system }}"
+        run: mise run build "${{ matrix.system }}"
       - name: Upload
         if: github.event_name != 'pull_request'
         run: |
@@ -95,4 +104,4 @@ jobs:
           curl -sfSL https://install.nexigon.dev/download-cli.sh | sh
           export NEXIGON_CLI="./nexigon-cli"
           sudo chown -R "$(id -u):$(id -g)" build
-          ./scripts/upload-release.sh
+          mise run release:upload
