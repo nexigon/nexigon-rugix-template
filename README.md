@@ -4,6 +4,12 @@ This repository provides a template for integrating [Nexigon](https://nexigon.de
 
 ## Setup
 
+Install [mise](https://mise.jdx.dev/), a container runtime supported by
+Rugix Bakery, `jq`, and `xz`. Release publication also requires Nexigon CLI
+with repository access. Nix is not required.
+For a direct image build, run `./run-bakery bake image <system>` or
+`mise run bakery -- bake image <system>`.
+
 To set up the project, follow these steps:
 
 1. Copy the `env.template` file to `.env`.
@@ -18,12 +24,13 @@ If you want to use Nexigon for OTA updates, also fill in these variables:
 
 ## OTA Update Workflow
 
-The release workflow consists of three scripts that share state through a `.release-env` file. This ensures the version is generated once and stays consistent across all steps — both locally and in CI.
+The release tasks share a pinned version in `.release-env` so builds and uploads
+use the same version.
 
 ### 1. Prepare the release
 
 ```bash
-./scripts/prepare-release.sh
+mise run release:prepare
 ```
 
 Generates a version identifier from the current timestamp and Git commit, creates the corresponding version in your Nexigon repository, and writes a `.release-env` file that pins the version for subsequent steps. The version is tagged with a locked build tag (e.g., `build-20260401120000-abc1234`) and a floating branch tag (e.g., `latest-build-main`).
@@ -31,19 +38,19 @@ Generates a version identifier from the current timestamp and Git commit, create
 ### 2. Build the release
 
 ```bash
-./scripts/build-release.sh <system> [<system> ...]
+mise run build <system> [<system> ...]
 ```
 
 Reads the pinned version from `.release-env` and builds system images and update bundles using the Rugix bakery with the matching `--release-version`. After building, the system image is compressed with `xz`. You can build multiple systems in one invocation:
 
 ```bash
-./scripts/build-release.sh customized-efi-amd64 customized-pi5
+mise run build customized-efi-amd64 customized-pi5
 ```
 
 ### 3. Upload the release
 
 ```bash
-./scripts/upload-release.sh
+mise run release:upload
 ```
 
 Reads `.release-env`, verifies that each build's baked version matches the pinned version (to catch stale builds), and uploads all artifacts to the Nexigon repository. Uploaded artifacts include:
@@ -59,7 +66,7 @@ Asset metadata is attached during upload, e.g., the bundle asset carries `{"rugi
 ### 4. Stabilize the release
 
 ```bash
-./scripts/stabilize-release.sh
+mise run release:stabilize
 ```
 
 Tags the latest build of the current branch as `stable`, promoting it as the latest stable release for deployment.

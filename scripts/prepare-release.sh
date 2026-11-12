@@ -10,8 +10,14 @@
 # The generated .release-env is sourced by build-release.sh and upload-release.sh.
 
 set -euo pipefail
+cd -- "$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
-. .env
+if [[ ! -f .env ]]; then
+    echo "[ERROR] .env is missing. Copy env.template to .env and configure it first." >&2
+    exit 1
+fi
+# shellcheck source=/dev/null
+. ./.env
 
 if [ -z "${NEXIGON_REPOSITORY:-}" ]; then
     echo "[ERROR] NEXIGON_REPOSITORY is not set"
@@ -41,14 +47,14 @@ PACKAGE_PATH="$NEXIGON_REPOSITORY/$NEXIGON_PACKAGE"
 VERSION_PATH="$PACKAGE_PATH/$BUILD_TAG"
 
 # Create the build version, if it doesn't exist.
-BUILD_VERSION_INFO=$($NEXIGON_CLI repositories versions resolve "$VERSION_PATH")
+BUILD_VERSION_INFO=$("$NEXIGON_CLI" repositories versions resolve "$VERSION_PATH")
 if [ "$(echo "$BUILD_VERSION_INFO" | jq -r '.result')" == "Found" ]; then
     echo "[INFO] build version already exists, reusing it"
     VERSION_ID=$(echo "$BUILD_VERSION_INFO" | jq -r '.versionId')
 else
     echo "[INFO] creating build version"
     VERSION_METADATA=$(jq -nc --arg version "$VERSION" '{imageVersion: $version}')
-    VERSION_ID=$($NEXIGON_CLI repositories versions create "$PACKAGE_PATH" \
+    VERSION_ID=$("$NEXIGON_CLI" repositories versions create "$PACKAGE_PATH" \
         --tag "$BUILD_TAG,locked" --tag "$FLOATING_TAG,reassign" \
         --metadata "$VERSION_METADATA" | jq -r '.versionId')
 fi
@@ -57,11 +63,10 @@ echo "[INFO] BUILD_TAG=$BUILD_TAG"
 echo "[INFO] VERSION=$VERSION"
 echo "[INFO] VERSION_ID=$VERSION_ID"
 
-cat > .release-env <<EOF
-BUILD_TAG=$BUILD_TAG
-FLOATING_TAG=$FLOATING_TAG
-VERSION=$VERSION
-VERSION_ID=$VERSION_ID
-EOF
+release_env="$(mktemp .release-env.XXXXXX)"
+trap 'rm -f -- "$release_env"' EXIT
+printf 'BUILD_TAG=%q\nFLOATING_TAG=%q\nVERSION=%q\nVERSION_ID=%q\n' \
+    "$BUILD_TAG" "$FLOATING_TAG" "$VERSION" "$VERSION_ID" > "$release_env"
+mv -- "$release_env" .release-env
 
 echo "[INFO] wrote .release-env"

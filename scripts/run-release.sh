@@ -10,13 +10,16 @@
 #   ./scripts/run-release.sh customized-efi-amd64
 
 set -euo pipefail
+cd -- "$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [ ! -f .release-env ]; then
     echo "[ERROR] .release-env not found — run ./scripts/prepare-release.sh first"
     exit 1
 fi
 
-. .release-env
+# shellcheck source=/dev/null
+. ./.release-env
+: "${VERSION:?The prepared release must define VERSION}"
 
 if [ $# -ne 1 ]; then
     echo "[ERROR] expected exactly one system"
