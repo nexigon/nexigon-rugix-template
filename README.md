@@ -76,14 +76,14 @@ Tags the latest build of the current branch as `stable`, promoting it as the lat
 The scripts use `nexigon-cli` to interact with Nexigon. Make sure you have it installed and configured correctly.
 To use Nexigon's software management functionality and OTA updates with Nexigon Cloud, you need to configure an S3 bucket within the repository's settings.
 
-This template includes the [`nexigon-rugix-ota`](https://github.com/nexigon/nexigon-rugix/tree/main/recipes/nexigon-rugix-ota) recipe from the [`nexigon-rugix`](https://github.com/nexigon/nexigon-rugix) repository.
-This recipe installs a Systemd service that will periodically check for updates and install the latest stable release of the specified package, if its version deviates from the current one.
-The correct artifacts are automatically identified based on the system name, allowing you to use the same release process across multiple device variants.
-Telemetry about the update process is sent to Nexigon in the form of events and device properties.
+Nexigon Agent installs the updates. The template's `nexigon-system-updates` recipe enables the agent's [system updates](https://docs.nexigon.dev/agent/next/concepts/system-updates) for the `stable` tag of the package in `.env`.
+Each device installs the update bundle of its system, so the same release process serves all device variants.
+The device reports its progress in the `dev.nexigon.ota.status` property and as events.
+The `dev.nexigon.ota.config` property of a device or its profile changes the release that it follows and adds policies, such as a maintenance window.
+Without `NEXIGON_REPOSITORY` and `NEXIGON_PACKAGE`, devices wait for this property.
 
-To manually check for and install updates, run `nexigon-rugix-ota` as root.
-
-If you need a more complex update workflow, e.g., display the available update to a user and wait for their explicit confirmation, copy the `nexigon-rugix-ota` recipe and modify the [update script](https://github.com/nexigon/nexigon-rugix/tree/main/recipes/nexigon-rugix-ota/files/nexigon-rugix-ota). Nexigon follows a [primitives-first architecture](https://nexigon.cloud/blog/2026-02-19-primitives-first-architecture/) giving you all the flexibility to customize the update process according to your requirements.
+The agent can also manage [Rugix Apps](https://docs.nexigon.dev/agent/next/concepts/rugix-apps), which requires Rugix Ctrl 1.4 or later.
+To enable it, add `[integrations.rugix.apps]` with `enabled = true` to the `extra_config` of `nexigon/nexigon-agent-config`.
 
 ## GitHub Actions Workflow
 
