@@ -21,6 +21,7 @@ If you want to use Nexigon for OTA updates, also fill in these variables:
 
 - `NEXIGON_REPOSITORY`: The path name or ID of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
+- `NEXIGON_ORGANIZATION`: The ID of the organization that owns the repository, beginning with `org_`. The release tasks need it when Nexigon CLI authenticates with a user token. An organization API token selects its own organization.
 
 ## OTA Update Workflow
 
@@ -76,13 +77,13 @@ Tags the latest build of the current branch as `stable`, promoting it as the lat
 The scripts use `nexigon-cli` to interact with Nexigon. Make sure you have it installed and configured correctly.
 To use Nexigon's software management functionality and OTA updates with Nexigon Cloud, you need to configure an S3 bucket within the repository's settings.
 
-Nexigon Agent installs the updates. The template's `nexigon-system-updates` recipe enables the agent's [system updates](https://docs.nexigon.dev/agent/next/concepts/system-updates) for the `stable` tag of the package in `.env`.
+Nexigon Agent installs the updates. The template's `nexigon-system-updates` recipe enables the agent's [system updates](https://docs.nexigon.dev/agent/concepts/system-updates) for the `stable` tag of the package in `.env`.
 Each device installs the update bundle of its system, so the same release process serves all device variants.
 The device reports its progress in the `dev.nexigon.ota.status` property and as events.
 The `dev.nexigon.ota.config` property of a device or its profile changes the release that it follows and adds policies, such as a maintenance window.
 Without `NEXIGON_REPOSITORY` and `NEXIGON_PACKAGE`, devices wait for this property.
 
-The agent can also manage [Rugix Apps](https://docs.nexigon.dev/agent/next/concepts/rugix-apps), which requires Rugix Ctrl 1.4 or later.
+The agent can also manage [Rugix Apps](https://docs.nexigon.dev/agent/concepts/rugix-apps), which requires Rugix Ctrl 1.4 or later.
 To enable it, add `[integrations.rugix.apps]` with `enabled = true` to the `extra_config` of `nexigon/nexigon-agent-config`.
 
 ## GitHub Actions Workflow
@@ -103,6 +104,7 @@ In addition, you also need to configure the following variables:
 
 - `NEXIGON_REPOSITORY`: The path name or ID of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
+- `NEXIGON_ORGANIZATION`: The ID of the organization that owns the repository, which the user token in `NEXIGON_USER_TOKEN` requires.
 
 ## ⚖️ Licensing
 
