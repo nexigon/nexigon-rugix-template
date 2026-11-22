@@ -13,6 +13,7 @@ on:
 env:
   NEXIGON_REPOSITORY: ${{ vars.NEXIGON_REPOSITORY }}
   NEXIGON_PACKAGE: ${{ vars.NEXIGON_PACKAGE }}
+  NEXIGON_ORGANIZATION: ${{ vars.NEXIGON_ORGANIZATION }}
 
 jobs:
   prepare-release:
