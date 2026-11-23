@@ -104,7 +104,6 @@ In addition, you also need to configure the following variables:
 
 - `NEXIGON_REPOSITORY`: The path name or ID of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
-- `NEXIGON_ORGANIZATION` (optional): The ID of the organization that owns the repository. Only needed if `NEXIGON_TOKEN` is a user token.
 
 ## ⚖️ Licensing
 
