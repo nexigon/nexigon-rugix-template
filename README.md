@@ -98,13 +98,13 @@ To use it, you need to configure the following secrets in your GitHub repository
 
 - `NEXIGON_HUB_URL`: The URL of your Nexigon instance.
 - `NEXIGON_DEPLOYMENT_TOKEN`: The deployment token of the project.
-- `NEXIGON_USER_TOKEN`: The user token to access the repository.
+- `NEXIGON_TOKEN`: An organization API token with access to the repository.
 
 In addition, you also need to configure the following variables:
 
 - `NEXIGON_REPOSITORY`: The path name or ID of the Nexigon repository to use.
 - `NEXIGON_PACKAGE`: The name of the Nexigon package to use.
-- `NEXIGON_ORGANIZATION`: The ID of the organization that owns the repository, which the user token in `NEXIGON_USER_TOKEN` requires.
+- `NEXIGON_ORGANIZATION` (optional): The ID of the organization that owns the repository. Only needed if `NEXIGON_TOKEN` is a user token.
 
 ## ⚖️ Licensing
 
